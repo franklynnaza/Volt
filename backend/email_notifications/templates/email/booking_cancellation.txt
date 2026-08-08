@@ -1,0 +1,16 @@
+BOOKING CANCELLATION
+
+Hello {{ user }},
+
+Your booking has been cancelled.
+
+CANCELLED BOOKING DETAILS:
+Title: {{ booking.title }}
+Location: {{ booking.workspace_name }}
+Date: {{ booking.date }}
+Time: {{ booking.start_time }} - {{ booking.end_time }}
+{% if booking.attendees %}Attendees: {{ booking.attendees|join:", " }}{% endif %}
+
+You can book a new space by logging into your account.
+
+This is an automated message, please do not reply directly to this email.

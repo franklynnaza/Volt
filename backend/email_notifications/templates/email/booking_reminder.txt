@@ -1,0 +1,18 @@
+BOOKING REMINDER
+
+Hello {{ user }},
+
+This is a friendly reminder about your upcoming booking today:
+
+BOOKING DETAILS:
+Title: {{ booking.title }}
+Location: {{ booking.workspace_name }}
+Date: {{ booking.date }}
+Time: {{ booking.start_time }} - {{ booking.end_time }}
+{% if booking.location %}Address: {{ booking.location }}{% endif %}
+{% if booking.attendees %}Attendees: {{ booking.attendees|join:", " }}{% endif %}
+{% if booking.notes %}Notes: {{ booking.notes }}{% endif %}
+
+We look forward to seeing you soon!
+
+This is an automated message, please do not reply directly to this email.
