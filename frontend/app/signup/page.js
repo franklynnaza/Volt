@@ -248,7 +248,16 @@ export default function SignupPage() {
               </div> */}
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && step < totalSteps) {
+                  e.preventDefault()
+                  nextStep()
+                }
+              }}
+              className="space-y-4"
+            >
               {/* Step Indicator */}
               <div className="flex justify-between mb-6">
                 {[...Array(totalSteps)].map((_, i) => (
