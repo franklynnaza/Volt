@@ -26,5 +26,5 @@ jobs:
 
     - name: Build and push frontend
       run: |
-        docker build -t voltacr.azurecr.io/volt-frontend:${GITHUB_RUN_NUMBER} ./frontend
+        docker build --build-arg NEXT_PUBLIC_API_URL=http://18.118.102.95:30800/api -t voltacr.azurecr.io/volt-frontend:${GITHUB_RUN_NUMBER} ./frontend
         docker push voltacr.azurecr.io/volt-frontend:${GITHUB_RUN_NUMBER}
