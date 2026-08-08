@@ -1,115 +1,140 @@
-# Volt Workspace
+# Volt — Workspace Booking Platform
 
-## Project Overview
-Volt is a scalable booking platform that simplifies workspace reservations, manages availability, and provides data-driven insights for efficient office space usage.
-![alt text](image.png)
-## Purpose
-Build a resilient system for booking desks, meeting rooms, and event halls with real-time updates, role-based access control, and analytics.
+A scalable booking platform for reserving desks, meeting rooms, and event halls, with real-time availability, role-based access control, and an AI-powered booking assistant.
+
+![Volt Screenshot](image.png)
+
+## Live Demo
+
+Demo available on request — infrastructure is spun up on demand rather than kept running continuously.
 
 ## Tech Stack
-### Frontend
-- Next.js
-- Tailwind CSS
-- React Context API, custom hooks
 
-### Backend
-- Django REST Framework (Python)
-- PostgreSQL
-- JWT for authentication
+**Frontend:** Next.js, Tailwind CSS, React Context API
+**Backend:** Django REST Framework (Python), JWT authentication
+**Database:** PostgreSQL (Azure Database for PostgreSQL)
+**Container Registry:** Azure Container Registry
+**Orchestration:** Kubernetes (k3s)
+**CI/CD:** GitHub Actions
+**Infrastructure:** Multi-cloud — Azure (database, container registry) + AWS EC2 (Kubernetes cluster)
 
-## Core Features
-1. **User Authentication**
-   - Sign up, login, secure account management
-   - Role-based access: Admin, Employee, Learner
+## Architecture
 
-2. **Booking System**
-   - Browse available workspaces (desks, meeting rooms, event halls)
-   - Book, cancel, reschedule, extend reservations in real-time
+```
+GitHub Push
+    │
+    ▼
+GitHub Actions (CI/CD)
+    │
+    ├─► Build backend image  ──► Azure Container Registry
+    └─► Build frontend image ──► Azure Container Registry
+                                        │
+                                        ▼
+                            Kubernetes (k3s on AWS EC2)
+                            ├── Backend Deployment + Service (NodePort)
+                            └── Frontend Deployment + Service (NodePort)
+                                        │
+                                        ▼
+                        Azure Database for PostgreSQL
+```
 
-3. **Notifications & Reminders**
-   - Email notifications for confirmations, reminders, conflicts, cancellations
+## Deployment Highlights
 
-4. **Reporting & Analytics**
-   - Admin dashboard tracks usage, peak hours, occupancy trends
+- **Containerized** both frontend (Next.js) and backend (Django + Gunicorn) with multi-stage Docker builds
+- **Automated CI/CD** — every push to `main` triggers GitHub Actions to build and push both images to Azure Container Registry, tagged by build number
+- **Kubernetes deployment** using Deployments, Services (NodePort), and Secrets — database credentials and other sensitive config are injected at runtime via Kubernetes Secrets, not hardcoded
+- **Horizontal scaling demonstrated** — backend and frontend can be scaled independently:
+  ```
+  kubectl scale deployment volt-backend --replicas=3
+  ```
+- **Multi-cloud setup** — PostgreSQL database and container registry hosted on Azure; Kubernetes cluster (k3s) running on AWS EC2, pulling images across cloud providers
 
-5. **User Roles**
-   - Admin: full control and reports
-   - Employee / Learner: booking access, personal dashboard
-
-## Other Features
-- **Profile Management**: Edit profile, booking preferences, history
-- **Availability Dashboard**: Real-time overview of spaces
-- **Calendar Integration**: Sync with Google Calendar / Outlook
-- **Pricing & Payments**: Define pricing, integrate payment gateway
-- **Mobile Compatibility**: Responsive UI or mobile app
-- **Third-party Integrations**: Google Workspace, Zoom, Slack
-
-## AI-Powered Features
-1. **Smart Booking Suggestions**
-   - Personalized workspace recommendations based on user history
-2. **Natural Language Booking Assistant (Chatbot)**
-   - Chat interface for conversational booking requests
-
-## Project Setup
+## Local Development Setup
 
 ### Prerequisites
-- Node.js (>=14)
-- Python (>=3.8)
-- Yarn or npm
-- PostgreSQL
+- Node.js (>=18)
+- Python (>=3.10)
+- PostgreSQL access (local or cloud)
 
-### Installation
-
-```powershell
-# Clone repository
-git clone https://github.com/codeAKstan/Volt.git
-cd Volt
-
-# Frontend
-cd frontend
-npm install
-npm run dev
-
-# Backend
-cd ../backend
+### Backend
+```bash
+cd backend
 python -m venv venv
-.\venv\Scripts\activate
+source venv/Scripts/activate  # or venv\Scripts\activate on Windows cmd
 pip install -r requirements.txt
-# Configure database in backend/backend/settings.py
+```
+
+Create a `.env` file in `backend/`:
+```
+DATABASE_URL=postgres://<user>:<password>@<host>:5432/<database>?sslmode=require
+MAILGUN_API_KEY=your-key
+MAILGUN_DOMAIN=your-domain
+```
+
+```bash
 python manage.py migrate
+python manage.py createsuperuser
 python manage.py runserver
 ```
 
-## Folder Structure
-```
-Volt/
-├── frontend/      # Next.js frontend
-├── backend/       # Django REST API
-└── README.md
-```
-
-## Tasks & Roadmap
-
-### Backend
-- User auth with roles (JWT, OAuth)
-- Booking CRUD APIs
-- Admin analytics endpoints
-- Notification system (email, SMS)
-- Data models: users, spaces, bookings, preferences, payments
-
 ### Frontend
-- Landing page
-- Booking dashboard
-- Admin analytics panel
-- Profile/settings page
-- Responsive design
+```bash
+cd frontend
+npm install --legacy-peer-deps
+npm run dev
+```
 
-### AI Features
-- Smart suggestions
-- Chatbot assistant
+## Kubernetes Deployment
 
-## Contributing
-Contributions welcome! Please open issues and PRs.
+### 1. Create secrets
+```bash
+kubectl create secret docker-registry acr-secret \
+  --docker-server=<your-registry>.azurecr.io \
+  --docker-username=<username> \
+  --docker-password=<password>
+
+kubectl create secret generic volt-secrets \
+  --from-literal=DATABASE_URL='<connection-string>' \
+  --from-literal=MAILGUN_API_KEY='<key>' \
+  --from-literal=MAILGUN_DOMAIN='<domain>' \
+  --from-literal=ALLOWED_HOSTS='*'
+```
+
+### 2. Apply manifests
+```bash
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f frontend-deployment.yaml
+```
+
+### 3. Verify
+```bash
+kubectl get pods
+kubectl get svc
+```
+
+### 4. Update a deployment with a new image
+```bash
+kubectl set image deployment/volt-backend volt-backend=<registry>/volt-backend:<new-tag>
+```
+
+## Core Features
+
+- User authentication with role-based access (Admin, Employee, Learner)
+- Real-time workspace booking (desks, meeting rooms, event halls)
+- Email notifications for bookings, reminders, and cancellations
+- Admin analytics dashboard for usage and occupancy trends
+- AI-powered booking suggestions and natural language booking assistant
+
+## What I Learned / Debugged
+
+- Fixed a Django `ALLOWED_HOSTS` misconfiguration for containerized deployment
+- Resolved a PostgreSQL `pgvector` extension requirement for AI embedding features
+- Diagnosed and fixed a Gunicorn worker timeout caused by cross-cloud database latency
+- Fixed a Next.js `NEXT_PUBLIC_API_URL` build-time environment variable issue that caused the frontend to call the wrong backend
+- Fixed a git submodule misconfiguration that silently prevented backend files from being tracked
+- Fixed a frontend multi-step form bug where pressing Enter triggered premature form submission
+- Configured k3s with `--tls-san` to allow secure remote access from a Kubernetes GUI (Lens)
 
 ## License
+
 MIT
