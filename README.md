@@ -34,7 +34,7 @@ GitHub Push ---GitHub Actions (CI/CD) ---- Build backend image  --> Azure Contai
 ## Deployment Highlights
 
 - **Containerized** both frontend (Next.js) and backend (Django + Gunicorn) with multi-stage Docker builds
-- **Automated CI/CD** — every push to `main` triggers GitHub Actions to build and push both images to Azure Container Registry, tagged by build number
+- **Automated CI/CD** — GitHub Actions builds the image and pushes it to Azure Container Registry. Six runs averaged 2 minutes 8 seconds from push to live.
 - **Kubernetes deployment** using Deployments, Services (NodePort), and Secrets — database credentials and other sensitive config are injected at runtime via Kubernetes Secrets, not hardcoded
 - **Horizontal scaling demonstrated** — backend and frontend can be scaled independently:
   ```
