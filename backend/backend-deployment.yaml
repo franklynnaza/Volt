@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: volt-backend
+  labels:
+    app: volt-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: volt-backend
+  template:
+    metadata:
+      labels:
+        app: volt-backend
+    spec:
+      imagePullSecrets:
+        - name: acr-secret
+      containers:
+        - name: volt-backend
+          image: voltacr.azurecr.io/volt-backend:2
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: volt-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: volt-backend-service
+spec:
+  type: NodePort
+  selector:
+    app: volt-backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30800
