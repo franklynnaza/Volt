@@ -21,21 +21,14 @@ Demo available on request — infrastructure is spun up on demand rather than ke
 ## Architecture
 
 ```
-GitHub Push
-    │
-    ▼
-GitHub Actions (CI/CD)
-    │
-    ├─► Build backend image  ──► Azure Container Registry
-    └─► Build frontend image ──► Azure Container Registry
-                                        │
-                                        ▼
-                            Kubernetes (k3s on AWS EC2)
-                            ├── Backend Deployment + Service (NodePort)
-                            └── Frontend Deployment + Service (NodePort)
-                                        │
-                                        ▼
-                        Azure Database for PostgreSQL
+GitHub Push ---GitHub Actions (CI/CD) ---- Build backend image  --> Azure Container Registry
+                                      |___ Build frontend image --> Azure Container Registry
+                                        
+                                        Kubernetes (k3s on AWS EC2)
+                                        |___ Backend Deployment + Service (NodePort)
+                                        └── Frontend Deployment + Service (NodePort)
+                                        |
+                                Azure Database for PostgreSQL
 ```
 
 ## Deployment Highlights
